@@ -1,4 +1,5 @@
 import streamlit as st
+from streamlit.errors import StreamlitSecretNotFoundError
 import os
 import time
 import pandas as pd
@@ -36,17 +37,24 @@ def main():
     initial_session_defaults()
 
     if "voice_pipeline" not in st.session_state:
-        try:
-            api_key = os.environ.get("GROQ_API_KEY", "")
+        api_key = os.environ.get("GROQ_API_KEY", "")
+        if not api_key:
+            try:
+                api_key = st.secrets.get("GROQ_API_KEY", "")
+            except StreamlitSecretNotFoundError:
+                api_key = ""
 
-            if not api_key and hasattr(st, "secrets") and "GROQ_API_KEY" in st.secrets:
-                api_key = st.secrets["GROQ_API_KEY"]
-            
+        api_key = str(api_key).strip()
+        if "\n" in api_key or "\r" in api_key:
+            st.error("GROQ_API_KEY must be a single line. Update it in your Streamlit secrets.")
+            st.session_state.voice_pipeline = None
+        elif api_key:
             groq_client = Groq(api_key=api_key)
             llm_coach = LLMCoach(groq_client)
             tts = TextToSpeech()
             st.session_state.voice_pipeline = VoicePipeline(llm_coach, tts)
-        except Exception as e:
+        else:
+            st.warning("AI coaching is disabled. Add GROQ_API_KEY to your Streamlit secrets to enable it.")
             st.session_state.voice_pipeline = None
 
     workout_started = st.session_state.get("workout_started", False)

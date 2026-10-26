@@ -1,4 +1,5 @@
 import time
+from groq import APIConnectionError
 import streamlit as st
 
 
@@ -77,7 +78,16 @@ class VoicePipeline:
             if now - self.last_spoken_at < 5:
                 return None
             
-        text = self.llm.give_feedback(event, issue)
+        try:
+            text = self.llm.give_feedback(event, issue)
+        except APIConnectionError:
+            self.last_spoken_at = now
+            st.warning(
+                "The AI coach could not connect to Groq. Check your GROQ_API_KEY "
+                "for extra whitespace or line breaks, and verify the deployed app can reach api.groq.com."
+            )
+            return None
+
         voice = self.tts.speak(text)
 
         self.last_spoken_at = now
