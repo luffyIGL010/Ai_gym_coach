@@ -3,7 +3,7 @@ groq
 gTTS
 mediapipe
 numpy
-opencv-python-headless==4.13.0.92
+opencv-contrib-python==4.13.0.92
 pandas
 streamlit
 streamlit-webrtc==0.71.0
