@@ -1,5 +1,5 @@
 import time
-from groq import APIConnectionError
+from groq import APIConnectionError, APIStatusError
 import streamlit as st
 
 
@@ -85,6 +85,13 @@ class VoicePipeline:
             st.warning(
                 "The AI coach could not connect to Groq. Check your GROQ_API_KEY "
                 "for extra whitespace or line breaks, and verify the deployed app can reach api.groq.com."
+            )
+            return None
+        except APIStatusError as error:
+            self.last_spoken_at = now
+            st.error(
+                f"The AI coach request failed (Groq HTTP {error.status_code}). "
+                "Check that the model is available, your API key has access, and your Groq usage limits are not exceeded."
             )
             return None
 
